@@ -1,0 +1,45 @@
+{
+  "name": "self-build-system",
+  "version": "1.0.0",
+  "description": "self build system",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node js/src/index.js",
+    "dev": "cross-env NODE_ENV=development nodemon js/src/index.js",
+    "debug": "nodemon --inspect js/src/index.js",
+    "tsc": "npm run rmjs && tsc --watch",
+    "lint": "eslint src",
+    "rmjs": "node scripts/js/remove.js.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mykhailo-vaskivnyuk/self-build-system.git"
+  },
+  "keywords": [
+    "app",
+    "module",
+    "architecture"
+  ],
+  "author": "m.vaskivnyuk",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mykhailo-vaskivnyuk/self-build-system/issues"
+  },
+  "homepage": "https://github.com/mykhailo-vaskivnyuk/self-build-system#readme",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.11.0",
+    "@typescript-eslint/parser": "^7.11.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.0.0",
+    "eslint-plugin-import": "^2.29.1",
+    "nodemon": "^3.1.2"
+  },
+  "dependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.5"
+  }
+}
