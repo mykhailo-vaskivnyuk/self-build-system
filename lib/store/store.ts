@@ -1,15 +1,17 @@
-import { EventEmitter } from '@lib/event.emitter/event.emitter';
+import { Adapter, IAdapterConfig } from '@lib/adapter/adapter';
 import { ErrorClass, ErrorInstance } from '@lib/error/error';
 import { ServiceErrorClass, ServiceErrorInstance } from '@lib/error/service.error';
 import { isChanged, toConsole } from '@lib/utils';
 import { IStoreState, StoreStatus } from './store.types';
+import { EventEmitter } from '@lib/event.emitter/event.emitter';
 
 export class Store<
-  T extends object,
+  T extends Record<string, any>,
   K extends string = string,
   E extends string = string,
+  C extends Record<string, any> = object,
   S extends IStoreState<T, K, E> = IStoreState<T, K, E>,
-> extends EventEmitter {
+> extends Adapter<C> {
   protected $state: T;
 
   protected loading = false;
@@ -23,16 +25,18 @@ export class Store<
   protected timer?: NodeJS.Timeout;
 
   constructor(
+    protected override bus: EventEmitter,
+    protected override config: IAdapterConfig<C, keyof C>,
     protected initialState: T,
     public Error: ErrorClass<E> | ServiceErrorClass<E>,
     protected initialStatus: StoreStatus<K> = 'READY',
   ) {
-    super();
+    super(bus, config);
     this.$state = { ...this.initialState };
     this.status = initialStatus;
   }
 
-  async init() {
+  override async init() {
     this.debug('Init method is not implemented');
   }
 
@@ -46,7 +50,7 @@ export class Store<
   }
 
   protected setState(newState: Partial<S>) {
-    const { loading, status, error, ...otherProps } = newState;
+    const { loading, status, error, ...stateProps } = newState;
     let statusChanged = false;
     if (typeof loading !== 'undefined') {
       this.loading = loading;
@@ -60,8 +64,8 @@ export class Store<
       this.error = error;
       statusChanged = true;
     }
-    if (Object.keys(otherProps)) {
-      this.$state = Object.assign(this.$state, otherProps);
+    if (Object.keys(stateProps)) {
+      this.$state = Object.assign(this.$state, stateProps);
       this.emit('state', this.$state);
     }
     if (statusChanged) {
@@ -243,10 +247,10 @@ export class Store<
 
   clear(withStatus?: StoreStatus<K>) {
     clearTimeout(this.timer);
-    const status = withStatus || this.initialStatus;
-    const error = null;
-    const loading = false;
-    this.setState({ ...this.initialState, loading, error, status });
+    this.status = withStatus || this.initialStatus;
+    this.error = null;
+    this.loading = false;
+    this.setState({ ...this.initialState, ...this.statusProps } as S);
   }
 
   despose() {
