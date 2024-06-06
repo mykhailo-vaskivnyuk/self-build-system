@@ -1,15 +1,15 @@
-import { Adapter, IAdapterConfig } from '@lib/adapter/adapter';
-import { ErrorClass, ErrorInstance } from '@lib/error/error';
-import { ServiceErrorClass, ServiceErrorInstance } from '@lib/error/service.error';
-import { isChanged, toConsole } from '@lib/utils';
+import { ErrorClass, ErrorInstance } from '../error/error';
+import { ServiceErrorClass, ServiceErrorInstance } from '../error/service.error';
+import { EventEmitter } from '../event.emitter/event.emitter';
+import { Adapter } from '../adapter/adapter';
+import { isChanged, toConsole } from '../utils';
 import { IStoreState, StoreStatus } from './store.types';
-import { EventEmitter } from '@lib/event.emitter/event.emitter';
 
 export class Store<
   T extends Record<string, any>,
   K extends string = string,
   E extends string = string,
-  C extends Record<string, any> = object,
+  C extends Record<string, string> = Record<string, string>,
   S extends IStoreState<T, K, E> = IStoreState<T, K, E>,
 > extends Adapter<C> {
   protected $state: T;
@@ -25,13 +25,14 @@ export class Store<
   protected timer?: NodeJS.Timeout;
 
   constructor(
-    protected override bus: EventEmitter,
-    protected override config: IAdapterConfig<C, keyof C>,
+    bus: EventEmitter | null,
+    name: string,
+    config: C,
     protected initialState: T,
     public Error: ErrorClass<E> | ServiceErrorClass<E>,
     protected initialStatus: StoreStatus<K> = 'READY',
   ) {
-    super(bus, config);
+    super(bus, name, config);
     this.$state = { ...this.initialState };
     this.status = initialStatus;
   }
