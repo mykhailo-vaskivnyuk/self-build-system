@@ -1,7 +1,7 @@
 import { ErrorClass, ErrorInstance } from '../error/error';
 import { ServiceErrorClass, ServiceErrorInstance } from '../error/service.error';
 import { EventEmitter } from '../event.emitter/event.emitter';
-import { Adapter } from '../adapter/adapter';
+import { Adapter, IAdapterConfig } from '../adapter/adapter';
 import { isChanged, toConsole } from '../utils';
 import { IStoreState, StoreStatus } from './store.types';
 
@@ -9,9 +9,8 @@ export class Store<
   T extends Record<string, any>,
   K extends string = string,
   E extends string = string,
-  C extends Record<string, string> = Record<string, string>,
   S extends IStoreState<T, K, E> = IStoreState<T, K, E>,
-> extends Adapter<C> {
+> extends Adapter<any> {
   protected $state: T;
 
   protected loading = false;
@@ -26,13 +25,12 @@ export class Store<
 
   constructor(
     bus: EventEmitter | null,
-    name: string,
-    config: C,
+    config: IAdapterConfig<any>,
     protected initialState: T,
     public Error: ErrorClass<E> | ServiceErrorClass<E>,
     protected initialStatus: StoreStatus<K> = 'READY',
   ) {
-    super(bus, name, config);
+    super(bus, config);
     this.$state = { ...this.initialState };
     this.status = initialStatus;
   }

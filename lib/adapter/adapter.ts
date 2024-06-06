@@ -2,39 +2,39 @@
 import { EventEmitter } from '../event.emitter/event.emitter';
 
 export interface IAdapterConfig<T extends Record<string, string>, K extends keyof T = keyof T> {
-  connect: Record<K, string>;
+  name: string;
+  deps: Record<K, string>;
 }
 
 export class Adapter<T extends Record<string, string>> extends EventEmitter {
-  protected config: IAdapterConfig<T>;
-
-  constructor(protected bus: EventEmitter | null, protected name: string, di: T) {
+  constructor(protected bus: EventEmitter | null, protected config: IAdapterConfig<T>) {
     super();
-    this.config = { connect: di };
-    this.on('prepare', this.prepare.bind(this));
-  }
-
-  protected prepare() {
     if (!this.bus) return;
-    const { connect } = this.config;
-    const entries = Object.entries(connect);
-    let counter = entries.length;
-    for (const [propertyName, instanceName] of entries) {
+    const depsArr = Object.entries(config.deps);
+    let counter = depsArr.length;
+    for (const [propertyName, instanceName] of depsArr) {
       this.bus.once(instanceName, (instance: any) => {
         this[propertyName as keyof this] = instance;
         counter--;
-        if (!counter) this.bus?.emit('prepared', this);
+        if (!counter) this.emit('prepared', this);
       });
     }
+    this.bus.once('prepare', this.prepare.bind(this));
     this.bus.once('init', this.init.bind(this));
     this.bus.once('start', this.start.bind(this));
   }
 
+  protected prepare() {
+    this.bus?.emit(this.config.name, this);
+  }
+
   init() {
-    // subscribe to injected dependecies
+    // subscribe on dependecies
+    this.emit('inited', this);
   }
 
   start() {
     // start listen or execute
+    this.emit('started', this);
   }
 }
